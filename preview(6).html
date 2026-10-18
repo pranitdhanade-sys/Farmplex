@@ -1,0 +1,451 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Farmplex — Solarpunk Farm Automation</title>
+<style>
+:root{
+  --bg:#f5f3e8;
+  --paper:#fffef7;
+  --green:#315c40;
+  --green2:#59845a;
+  --lime:#c9df83;
+  --mint:#e1edce;
+  --yellow:#f1c968;
+  --ink:#283b2c;
+  --muted:#7c8977;
+  --line:#dce2ce;
+  --blue:#8bcbdc;
+  --red:#bb5546;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,sans-serif}
+button{font:inherit;cursor:pointer;transition:.2s}
+button:focus-visible{outline:3px solid var(--yellow);outline-offset:3px}
+.app{display:flex;min-height:100vh}
+.sidebar{width:238px;background:#e8edda;border-right:1px solid var(--line);padding:27px 17px;flex-shrink:0}
+.logo{font-size:27px;font-weight:800;letter-spacing:-1.4px;padding:0 12px}
+.logo span{color:var(--green2)}
+.logo-icon{color:#c49b34;margin-right:5px}
+.brand-sub{font-size:10px;letter-spacing:2px;color:var(--muted);padding:8px 12px 33px}
+.nav-label{font-size:10px;letter-spacing:1.7px;color:var(--muted);padding:0 12px 12px}
+nav{display:grid;gap:5px}
+nav button{border:0;background:transparent;color:#647360;text-align:left;padding:13px 12px;border-radius:9px;font-size:13px}
+nav button:hover,nav button.active{background:var(--green);color:#fffef7}
+.side-bottom{margin-top:34px;background:#f9f9ef;border:1px solid var(--line);border-radius:12px;padding:15px;font-size:11px;line-height:2;color:var(--muted)}
+.dot{display:inline-block;width:7px;height:7px;background:#75a65e;border-radius:50%;margin-right:6px}
+main{flex:1;min-width:0}
+header{height:76px;display:flex;align-items:center;justify-content:space-between;padding:0 34px;background:var(--paper);border-bottom:1px solid var(--line);gap:10px}
+.header-title{font-weight:700;font-size:14px}
+.header-sub{font-size:11px;color:var(--muted);margin-top:5px}
+.demo{background:#f8e9bd;color:#725b20;padding:9px 12px;border-radius:30px;font-size:10px;letter-spacing:.5px}
+.content{padding:30px 34px;max-width:1500px;margin:auto}
+.hero{background:var(--green);color:#fffef7;border-radius:18px;padding:27px 30px;position:relative;overflow:hidden;margin-bottom:21px}
+.hero:after{content:"☀";position:absolute;right:36px;top:5px;font-size:110px;color:#d8e7a2;opacity:.85}
+.hero h1{font-size:31px;letter-spacing:-1.2px;margin:0 0 10px;position:relative;z-index:1}
+.hero p{font-size:13px;line-height:1.7;max-width:470px;color:#e2ead5;position:relative;z-index:1}
+.hero .hero-tag{font-size:10px;letter-spacing:2px;color:var(--lime);margin-bottom:13px}
+h1,h2,h3,p{margin-top:0}
+h2{font-size:15px;margin-bottom:0}
+h3{font-size:13px;margin-bottom:0}
+.desc{font-size:12px;color:var(--muted);line-height:1.7}
+.grid{display:grid;gap:16px}
+.metrics{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:18px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:20px;min-width:0}
+.metric-top{display:flex;justify-content:space-between;align-items:center}
+.metric-icon{width:32px;height:32px;display:grid;place-items:center;border-radius:10px;background:var(--mint);font-size:17px}
+.metric-label{font-size:12px;color:var(--muted)}
+.metric-value{font-size:30px;font-weight:750;letter-spacing:-1px;margin:16px 0 8px}
+.unit{font-size:12px;font-weight:400;color:var(--muted)}
+.hint{font-size:10px;color:var(--muted)}
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:19px}
+.tag{font-size:10px;color:var(--green);background:var(--mint);padding:6px 9px;border-radius:30px;white-space:nowrap}
+.two{grid-template-columns:1.2fr 1fr;margin-bottom:18px}
+.three-tanks{grid-template-columns:repeat(3,minmax(0,1fr));text-align:center}
+.tank-card{border:1px solid var(--line);border-radius:12px;padding:14px 7px;background:#fbfcf4}
+.tank{height:125px;width:65px;border:2px solid #9eb19a;border-radius:9px 9px 16px 16px;margin:13px auto 12px;position:relative;overflow:hidden;background:#f3f6e9}
+.water{position:absolute;bottom:0;left:0;right:0;height:65%;background:var(--blue);transition:height 1s ease}
+.water:before{content:"";position:absolute;left:-25%;top:-5px;width:150%;height:10px;background:#c2e9ee;border-radius:50%;animation:wave 2.4s ease-in-out infinite alternate}
+@keyframes wave{to{transform:translateX(9px)}}
+.tank-name{font-size:11px;font-weight:600}
+.tank-level{font-size:22px;font-weight:750;margin-top:7px}
+.tank-unit{font-size:10px;color:var(--muted);margin-top:4px}
+.equipment-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding:15px 0}
+.equipment-row:last-child{border-bottom:0}
+.equipment-name{font-size:13px;font-weight:700}
+.equipment-desc{font-size:11px;color:var(--muted);margin-top:5px}
+.switch{border:0;background:#d8ddce;width:42px;height:24px;border-radius:30px;padding:3px;flex-shrink:0}
+.switch:after{content:"";display:block;width:18px;height:18px;border-radius:50%;background:white;transition:.2s}
+.switch.on{background:var(--green2)}
+.switch.on:after{transform:translateX(18px)}
+.valves{grid-template-columns:repeat(4,minmax(0,1fr))}
+.valve{border:1px solid var(--line);border-radius:12px;padding:15px 9px;text-align:center;background:#fffef7}
+.valve.open{background:#e8f2d9;border-color:#a7c68c}
+.valve-icon{font-size:25px;color:#9eaa93;margin:4px 0 9px}
+.valve.open .valve-icon{color:var(--green2)}
+.valve-name{font-size:12px;font-weight:750}
+.valve-status{font-size:10px;color:var(--muted);margin:6px 0 12px}
+.btn{border:1px solid var(--line);background:#fffef7;color:var(--ink);border-radius:8px;padding:10px 13px;font-size:11px;font-weight:650}
+.btn:hover{background:var(--mint)}
+.btn-green{background:var(--green);color:#fffef7;border-color:var(--green)}
+.btn-green:hover{background:#477651}
+.btn-yellow{background:var(--yellow);color:#4c421f;border-color:var(--yellow)}
+.btn-red{background:#fae7df;color:var(--red);border-color:#e9c7bb}
+.valve .btn{width:100%;padding:8px 3px;font-size:10px}
+.sequence{display:grid;gap:0}
+.step{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}
+.step:last-child{border-bottom:0}
+.step-number{width:29px;height:29px;border-radius:50%;display:grid;place-items:center;background:var(--mint);color:var(--green);font-size:11px;flex-shrink:0}
+.step-title{font-size:12px;font-weight:700}
+.step-sub{font-size:10px;color:var(--muted);margin-top:4px}
+.step-state{margin-left:auto;font-size:10px;color:var(--muted)}
+.status-line{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);font-size:12px}
+.status-line:last-child{border-bottom:0}
+.good{color:var(--green2)}
+.warning{color:#9a7626}
+.bad{color:var(--red)}
+.notice{background:#fbf0cf;border:1px solid #ebdca8;padding:13px 15px;border-radius:10px;font-size:11px;line-height:1.7;color:#725b20;margin-bottom:19px}
+.page{display:block}
+.hidden{display:none!important}
+.history-row{display:grid;grid-template-columns:85px 1fr auto;gap:12px;padding:14px 0;border-bottom:1px solid var(--line);font-size:12px}
+.history-row:last-child{border:0}
+.footer{text-align:center;color:var(--muted);font-size:10px;letter-spacing:1px;margin-top:27px}
+@media(max-width:1100px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.two{grid-template-columns:1fr}}
+@media(max-width:700px){.app{display:block}.sidebar{width:100%;padding:17px}.brand-sub{padding-bottom:16px}nav{grid-template-columns:repeat(3,1fr)}nav button{font-size:11px;text-align:center;padding:11px 4px}.nav-label,.side-bottom{display:none}header{padding:0 16px}.content{padding:19px 13px}.hero{padding:23px 20px}.hero h1{font-size:25px}.hero:after{right:9px;font-size:68px;top:20px}.card{padding:15px}.valves{grid-template-columns:repeat(2,minmax(0,1fr))}.tank{height:100px;width:51px}.three-tanks{gap:7px}.tank-card{padding:12px 3px}.metric-value{font-size:25px}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside>
+  <div class="logo"><span class="logo-icon">✳</span>farm<span>plex</span></div>
+  <div class="brand-sub">GROW WITH NATURE</div>
+  <div class="nav-label">FARM MANAGEMENT</div>
+  <nav>
+    <button class="active" data-page="overview">☘ &nbsp; Overview</button>
+    <button data-page="controls">⚙ &nbsp; Controls</button>
+    <button data-page="automation">↻ &nbsp; Automation</button>
+    <button data-page="alarms">♧ &nbsp; Alarms</button>
+    <button data-page="history">◷ &nbsp; History</button>
+  </nav>
+  <div class="side-bottom">
+    <div><span class="dot"></span>Simulation running</div>
+    Hardware: disconnected<br>
+    Chemical dosing: disabled<br>
+    <span id="clock"></span>
+  </div>
+</aside>
+
+<main>
+<header>
+  <div><div class="header-title" id="headerTitle">Farm overview</div><div class="header-sub">Berry farm / Fertigation unit 01</div></div>
+  <span class="demo">☀ DEMO DATA ONLY</span>
+</header>
+
+<div class="content">
+<div class="notice">🌱 <b>Simulation mode.</b> All sensor readings and device states are dummy data. No real sensors, pumps, valves, or chemical dosing equipment are connected.</div>
+
+<section class="page" id="overview">
+  <div class="hero">
+    <div class="hero-tag">THE FUTURE OF FARMING</div>
+    <h1>A greener way to grow.</h1>
+    <p>Intelligent irrigation monitoring for a thriving berry farm. Keep water visible, track nutrient measurements, and monitor every zone from one place.</p>
+  </div>
+
+  <div class="grid metrics">
+    <div class="card"><div class="metric-top"><span class="metric-label">Water pH</span><span class="metric-icon">◉</span></div><div class="metric-value">6.2</div><div class="hint">Simulated measurement</div></div>
+    <div class="card"><div class="metric-top"><span class="metric-label">EC level</span><span class="metric-icon">≈</span></div><div class="metric-value">1.4 <span class="unit">mS/cm</span></div><div class="hint">Simulated measurement</div></div>
+    <div class="card"><div class="metric-top"><span class="metric-label">Water available</span><span class="metric-icon">♧</span></div><div class="metric-value" id="waterMetric">78%</div><div class="hint">Dummy tank level</div></div>
+    <div class="card"><div class="metric-top"><span class="metric-label">System mode</span><span class="metric-icon">☀</span></div><div class="metric-value" style="font-size:23px">Standby</div><div class="hint">No automatic dosing</div></div>
+  </div>
+
+  <div class="grid two">
+    <div class="card">
+      <div class="section-head"><h2>Water & nutrient reserves</h2><span class="tag">SIMULATED</span></div>
+      <div class="grid three-tanks">
+        <div class="tank-card"><div class="tank-name">Water</div><div class="tank"><div class="water" id="water-main" style="height:78%"></div></div><div class="tank-level" id="level-main">78%</div><div class="tank-unit">1000 L capacity</div></div>
+        <div class="tank-card"><div class="tank-name">Stock A</div><div class="tank"><div class="water" id="water-a" style="height:62%;background:#edcf78"></div></div><div class="tank-level" id="level-a">62%</div><div class="tank-unit">100 L capacity</div></div>
+        <div class="tank-card"><div class="tank-name">Stock B</div><div class="tank"><div class="water" id="water-b" style="height:54%;background:#9dc88a"></div></div><div class="tank-level" id="level-b">54%</div><div class="tank-unit">100 L capacity</div></div>
+      </div>
+      <p class="desc" style="margin:17px 0 0">Animated water surfaces are visual effects, not physical sensor readings.</p>
+    </div>
+    <div class="card">
+      <div class="section-head"><h2>Pump monitoring</h2><span class="tag">DEMO</span></div>
+      <div class="equipment-row"><div><div class="equipment-name">P1 · Water pump</div><div class="equipment-desc" id="desc-p1">Simulated OFF</div></div><button class="switch" id="switch-p1" onclick="togglePump('p1')" aria-label="Toggle P1"></button></div>
+      <div class="equipment-row"><div><div class="equipment-name">P2 · Circulation pump</div><div class="equipment-desc" id="desc-p2">Simulated OFF</div></div><button class="switch" id="switch-p2" onclick="togglePump('p2')" aria-label="Toggle P2"></button></div>
+      <div class="notice" style="margin-top:17px;margin-bottom:0">⚠ Physical feedback and safety interlocks are not verified.</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:18px">
+    <div class="section-head"><h2>Irrigation zones</h2><button class="btn" onclick="showPage('controls')">Manage valves →</button></div>
+    <div class="grid valves" id="overviewValves"></div>
+  </div>
+
+  <div class="grid two">
+    <div class="card">
+      <div class="section-head"><h2>Automation sequence</h2><span class="tag">STANDBY</span></div>
+      <div class="sequence">
+        <div class="step"><div class="step-number">01</div><div><div class="step-title">Check system readiness</div><div class="step-sub">Sensor and interlock verification</div></div><span class="step-state">Pending</span></div>
+        <div class="step"><div class="step-number">02</div><div><div class="step-title">Verify water availability</div><div class="step-sub">Check simulated tank level</div></div><span class="step-state">Pending</span></div>
+        <div class="step"><div class="step-number">03</div><div><div class="step-title">Select irrigation zone</div><div class="step-sub">Preview only, no dosing</div></div><span class="step-state">Pending</span></div>
+      </div>
+      <button class="btn btn-green" style="margin-top:17px" onclick="showPage('automation')">View sequence →</button>
+    </div>
+    <div class="card">
+      <div class="section-head"><h2>Safety & interlocks</h2><span class="tag">DEMO</span></div>
+      <div class="status-line"><span>Hardware connection</span><strong class="bad">Offline</strong></div>
+      <div class="status-line"><span>Sensor validation</span><strong class="warning">Unverified</strong></div>
+      <div class="status-line"><span>Automatic chemical dosing</span><strong class="good">Disabled</strong></div>
+      <div class="status-line"><span>Safe-stop control</span><strong>Demo only</strong></div>
+      <button class="btn btn-red" style="margin-top:17px" onclick="safeStop()">■ Safe stop</button>
+    </div>
+  </div>
+</section>
+
+<section class="page hidden" id="controls">
+  <h1>Farm controls</h1><p class="desc">Manage simulated valves, pumps and tank levels.</p>
+  <div class="notice">Controls below only change the demo display. They are not connected to farm equipment.</div>
+  <div class="card" style="margin-bottom:18px">
+    <div class="section-head"><h2>Valve management</h2><span class="tag">V1 — V4</span></div>
+    <div class="grid valves" id="controlValves"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px"><button class="btn btn-green" onclick="allValves(true)">Open all</button><button class="btn" onclick="allValves(false)">Close all</button></div>
+  </div>
+  <div class="grid two">
+    <div class="card"><div class="section-head"><h2>Pump controls</h2><span class="tag">DEMO</span></div>
+      <div class="equipment-row"><div><div class="equipment-name">P1 · Water pump</div><div class="equipment-desc">Water supply</div></div><button class="btn" id="control-p1" onclick="togglePump('p1')">Start</button></div>
+      <div class="equipment-row"><div><div class="equipment-name">P2 · Circulation pump</div><div class="equipment-desc">Mixing circuit</div></div><button class="btn" id="control-p2" onclick="togglePump('p2')">Start</button></div>
+    </div>
+    <div class="card"><div class="section-head"><h2>Tank level simulator</h2><span class="tag">DUMMY</span></div>
+      <label class="desc">Water tank</label><input style="display:block;width:100%;accent-color:#59845a;margin:12px 0 20px" type="range" min="0" max="100" value="78" oninput="setLevel('main',this.value)">
+      <label class="desc">Stock tank A</label><input style="display:block;width:100%;accent-color:#59845a;margin:12px 0 20px" type="range" min="0" max="100" value="62" oninput="setLevel('a',this.value)">
+      <label class="desc">Stock tank B</label><input style="display:block;width:100%;accent-color:#59845a;margin:12px 0" type="range" min="0" max="100" value="54" oninput="setLevel('b',this.value)">
+    </div>
+  </div>
+  <div class="card" style="margin-top:18px"><h2>Emergency stop simulation</h2><p class="desc" style="margin-top:10px">Stops simulated outputs and cancels the demo sequence. This is not a certified physical emergency-stop system.</p><button class="btn btn-red" onclick="safeStop()">■ Trigger safe stop</button> <button class="btn" onclick="resetDemo()">Reset demo</button><p class="desc" id="stopMessage" style="margin-top:15px">No stop request active.</p></div>
+</section>
+
+<section class="page hidden" id="automation">
+  <h1>Automation centre</h1><p class="desc">Preview the farm's irrigation workflow.</p>
+  <div class="card">
+    <div class="section-head"><h2>Sequence overview</h2><span class="tag">DOSING DISABLED</span></div>
+    <div class="sequence" id="sequenceSteps">
+      <div class="step"><div class="step-number">01</div><div><div class="step-title">System readiness</div><div class="step-sub">Review interlock and sensor status</div></div><span class="step-state">Pending</span></div>
+      <div class="step"><div class="step-number">02</div><div><div class="step-title">Water availability</div><div class="step-sub">Review simulated tank levels</div></div><span class="step-state">Pending</span></div>
+      <div class="step"><div class="step-number">03</div><div><div class="step-title">Select zone</div><div class="step-sub">Preview valve selection</div></div><span class="step-state">Pending</span></div>
+      <div class="step"><div class="step-number">04</div><div><div class="step-title">Review pH and EC</div><div class="step-sub">Display mock measurements only</div></div><span class="step-state">Pending</span></div>
+      <div class="step"><div class="step-number">05</div><div><div class="step-title">Return to standby</div><div class="step-sub">End demo sequence</div></div><span class="step-state">Pending</span></div>
+    </div>
+    <div style="height:7px;background:var(--mint);border-radius:10px;overflow:hidden;margin:22px 0"><div id="progress" style="height:100%;width:0;background:var(--green2);transition:width .4s"></div></div>
+    <p class="desc" id="sequenceStatus">Sequence is idle.</p>
+    <button class="btn btn-green" id="runSequence" onclick="runSequence()">Run demo sequence</button> <button class="btn" onclick="resetSequence()">Reset sequence</button>
+    <div class="notice" style="margin-top:20px;margin-bottom:0">No fertilizer injection or pH correction is executed. Real deployment requires validated sensor readings, hardware interlocks, flow verification, and independent safety logic.</div>
+  </div>
+</section>
+
+<section class="page hidden" id="alarms">
+  <h1>Alarms & safety</h1><p class="desc">Simulation notices and hardware readiness.</p>
+  <div class="card">
+    <div class="status-line"><span>Data source</span><strong class="warning">Dummy values</strong></div>
+    <div class="status-line"><span>Hardware connection</span><strong class="bad">Disconnected</strong></div>
+    <div class="status-line"><span>Physical interlocks</span><strong class="warning">Unverified</strong></div>
+    <div class="status-line"><span>Chemical dosing</span><strong class="good">Disabled</strong></div>
+    <div id="alarmLog" class="notice" style="margin-top:18px;margin-bottom:0">System is operating as a local UI simulation. No actual equipment status is available.</div>
+  </div>
+</section>
+
+<section class="page hidden" id="history">
+  <h1>Event history</h1><p class="desc">Actions recorded during this browser session.</p>
+  <div class="card"><div class="section-head"><h2>Recent events</h2><button class="btn" onclick="clearHistory()">Clear history</button></div><div id="historyList"><p class="desc">No events yet.</p></div></div>
+</section>
+<div class="footer">FARMPLEX · GROW WITH NATURE · SOLARPUNK FARM UI · SIMULATED DATA</div>
+</div>
+</main>
+</div>
+
+<script>
+const state={
+ pumps:{p1:false,p2:false},
+ valves:{v1:false,v2:false,v3:false,v4:false},
+ levels:{main:78,a:62,b:54},
+ stopped:false,
+ sequenceTimer:null,
+ events:[]
+};
+
+const names={v1:"Zone 01",v2:"Zone 02",v3:"Zone 03",v4:"Zone 04"};
+
+function showPage(id){
+ document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));
+ document.getElementById(id).classList.remove("hidden");
+ document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===id));
+ const titles={overview:"Farm overview",controls:"Farm controls",automation:"Automation centre",alarms:"Alarms & safety",history:"Event history"};
+ document.getElementById("headerTitle").textContent=titles[id];
+}
+document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
+
+function record(message){
+ const time=new Date().toLocaleTimeString();
+ state.events.unshift({time,message});
+ state.events=state.events.slice(0,40);
+ renderHistory();
+}
+
+function valveHTML(id){
+ const open=state.valves[id];
+ return `<div class="valve ${open?"open":""}">
+ <div class="valve-icon">◉</div>
+ <div class="valve-name">${id.toUpperCase()}</div>
+ <div class="valve-status">${open?"Open":"Closed"} · ${names[id]}</div>
+ <button class="btn ${open?"btn-green":""}" onclick="toggleValve('${id}')">${open?"Close":"Open"}</button>
+ </div>`;
+}
+
+function renderValves(){
+ document.getElementById("overviewValves").innerHTML=Object.keys(state.valves).map(id=>{
+ const open=state.valves[id];
+ return `<div class="valve ${open?"open":""}"><div class="valve-icon">◉</div><div class="valve-name">${id.toUpperCase()}</div><div class="valve-status">${open?"Open":"Closed"}</div></div>`;
+ }).join("");
+ document.getElementById("controlValves").innerHTML=Object.keys(state.valves).map(valveHTML).join("");
+}
+
+function toggleValve(id){
+ if(state.stopped)return;
+ state.valves[id]=!state.valves[id];
+ record(id.toUpperCase()+" "+(state.valves[id]?"opened":"closed")+" (demo)");
+ update();
+}
+
+function allValves(open){
+ if(state.stopped&&open)return;
+ Object.keys(state.valves).forEach(id=>state.valves[id]=open);
+ record(open?"All demo valves opened":"All demo valves closed");
+ update();
+}
+
+function togglePump(id){
+ if(state.stopped)return;
+ if(id==="p2"&&!state.pumps.p2&&!state.pumps.p1){
+  document.getElementById("alarmLog").textContent="Demo interlock: P1 must be on before P2. This is a UI simulation only.";
+  record("P2 start blocked: P1 is off");
+  showPage("alarms");
+  return;
+ }
+ if(id==="p1"&&!state.pumps.p1&&state.levels.main<20){
+  record("P1 start blocked: simulated water level below 20%");
+  alert("Demo interlock: simulated water level is too low.");
+  return;
+ }
+ state.pumps[id]=!state.pumps[id];
+ record(id.toUpperCase()+" "+(state.pumps[id]?"started":"stopped")+" (demo)");
+ update();
+}
+
+function setLevel(id,value){
+ state.levels[id]=Number(value);
+ document.getElementById("water-"+id).style.height=value+"%";
+ document.getElementById("level-"+id).textContent=value+"%";
+ if(id==="main"){
+  document.getElementById("waterMetric").textContent=value+"%";
+  if(value<20&&(state.pumps.p1||state.pumps.p2)){
+   state.pumps.p1=false;state.pumps.p2=false;
+   record("Demo pumps stopped: low simulated water level");
+   update();
+  }
+ }
+ record("Simulated "+id+" tank level set to "+value+"%");
+}
+
+function update(){
+ Object.keys(state.pumps).forEach(id=>{
+  const on=state.pumps[id];
+  document.getElementById("switch-"+id).classList.toggle("on",on);
+  document.getElementById("desc-"+id).textContent="Simulated "+(on?"ON":"OFF");
+  document.getElementById("control-"+id).textContent=on?"Stop":"Start";
+  document.getElementById("control-"+id).classList.toggle("btn-green",on);
+ });
+ renderValves();
+}
+
+function safeStop(){
+ clearInterval(state.sequenceTimer);
+ state.sequenceTimer=null;
+ state.stopped=true;
+ Object.keys(state.pumps).forEach(id=>state.pumps[id]=false);
+ Object.keys(state.valves).forEach(id=>state.valves[id]=false);
+ document.getElementById("stopMessage").textContent="Safe-stop request active in this simulation. All demo outputs are off.";
+ document.getElementById("alarmLog").textContent="Demo safe-stop activated. Physical equipment is not connected.";
+ document.getElementById("runSequence").disabled=true;
+ document.getElementById("sequenceStatus").textContent="Stopped by simulated safe-stop.";
+ document.getElementById("progress").style.width="0";
+ record("Safe-stop activated; simulated outputs turned off");
+ update();
+ showPage("controls");
+}
+
+function resetDemo(){
+ state.stopped=false;
+ Object.keys(state.pumps).forEach(id=>state.pumps[id]=false);
+ Object.keys(state.valves).forEach(id=>state.valves[id]=false);
+ document.getElementById("stopMessage").textContent="Stop request cleared for the demo only. No physical system has been reset.";
+ document.getElementById("runSequence").disabled=false;
+ resetSequence();
+ record("Demo reset");
+ update();
+}
+
+function resetSequence(){
+ clearInterval(state.sequenceTimer);
+ state.sequenceTimer=null;
+ document.getElementById("progress").style.width="0";
+ document.getElementById("sequenceStatus").textContent="Sequence is idle.";
+ document.querySelectorAll("#sequenceSteps .step-state").forEach(s=>s.textContent="Pending");
+ if(!state.stopped)document.getElementById("runSequence").disabled=false;
+}
+
+function runSequence(){
+ if(state.stopped){alert("Reset the demo before running the sequence.");return}
+ if(Object.values(state.levels).some(v=>v<20)){
+  alert("Demo interlock: all simulated tanks must be above 20%.");
+  return;
+ }
+ resetSequence();
+ const steps=[20,40,60,80,100];
+ let i=0;
+ document.getElementById("runSequence").disabled=true;
+ state.sequenceTimer=setInterval(()=>{
+  if(state.stopped){clearInterval(state.sequenceTimer);return}
+  document.getElementById("progress").style.width=steps[i]+"%";
+  const row=document.querySelectorAll("#sequenceSteps .step")[i];
+  row.querySelector(".step-state").textContent="Complete";
+  row.querySelector(".step-number").textContent="✓";
+  i++;
+  if(i===steps.length){
+   clearInterval(state.sequenceTimer);
+   state.sequenceTimer=null;
+   document.getElementById("sequenceStatus").textContent="Demo sequence completed. System returned to standby; no dosing performed.";
+   document.getElementById("runSequence").disabled=false;
+   record("Demo sequence completed; no chemical dosing performed");
+  }
+ },700);
+ document.getElementById("sequenceStatus").textContent="Running visual sequence preview...";
+ record("Demo sequence started");
+}
+
+function renderHistory(){
+ const list=document.getElementById("historyList");
+ if(!state.events.length){list.innerHTML='<p class="desc">No events yet.</p>';return}
+ list.innerHTML=state.events.map(e=>`<div class="history-row"><span>${e.time}</span><span>${e.message}</span><span class="tag">DEMO</span></div>`).join("");
+}
+function clearHistory(){state.events=[];renderHistory()}
+
+function tickClock(){document.getElementById("clock").textContent=new Date().toLocaleTimeString()}
+setInterval(tickClock,1000);
+tickClock();
+renderValves();
+update();
+record("Farmplex solarpunk dashboard initialized");
+</script>
+</body>
+</html>

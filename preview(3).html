@@ -1,0 +1,574 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Farmplex | Berry Farm Automation</title>
+<style>
+:root {
+  --bg: #f4f0df;
+  --paper: #fffdf5;
+  --ink: #171717;
+  --green: #b8ff3b;
+  --blue: #9be7ff;
+  --red: #ff705e;
+  --yellow: #ffdc57;
+  --border: 3px solid var(--ink);
+  --shadow: 5px 5px 0 var(--ink);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Courier New", monospace;
+  font-weight: 700;
+}
+button { font: inherit; cursor: pointer; }
+button:focus-visible { outline: 4px dashed var(--ink); outline-offset: 3px; }
+.layout { display: flex; min-height: 100vh; }
+.sidebar {
+  width: 245px;
+  flex-shrink: 0;
+  background: var(--green);
+  border-right: var(--border);
+  padding: 25px 17px;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+.brand { font-size: 27px; line-height: 1; letter-spacing: -2px; }
+.brand span { display: block; font-size: 11px; letter-spacing: 2px; margin-top: 9px; }
+.demo-tag {
+  display: inline-block;
+  border: 2px solid var(--ink);
+  background: var(--yellow);
+  padding: 7px;
+  font-size: 11px;
+}
+.nav { display: grid; gap: 10px; }
+.nav button {
+  text-align: left;
+  padding: 13px 10px;
+  background: transparent;
+  border: 2px solid transparent;
+}
+.nav button.active, .nav button:hover {
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.sidebar-bottom { margin-top: auto; font-size: 11px; line-height: 1.8; }
+main { flex: 1; min-width: 0; padding: 25px; }
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 15px; flex-wrap: wrap; margin-bottom: 25px;
+}
+h1 { font-size: clamp(23px, 3vw, 36px); margin: 0; letter-spacing: -2px; }
+h2 { font-size: 17px; margin: 0 0 18px; }
+h3 { font-size: 13px; margin: 0 0 12px; }
+.muted { font-size: 11px; opacity: .65; }
+.status {
+  display: inline-flex; align-items: center; gap: 8px;
+  border: 2px solid var(--ink); padding: 9px 11px;
+  background: var(--yellow); font-size: 11px;
+}
+.dot { width: 10px; height: 10px; border-radius: 50%; background: #777; }
+.grid { display: grid; gap: 18px; }
+.metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 18px; }
+.columns { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.card {
+  border: var(--border); background: var(--paper);
+  box-shadow: var(--shadow); padding: 19px; min-width: 0;
+}
+.metric { min-height: 130px; }
+.metric .label { font-size: 11px; }
+.metric .number { font-size: clamp(24px, 3vw, 35px); margin: 14px 0 8px; letter-spacing: -2px; }
+.metric.green { background: var(--green); }
+.metric.blue { background: var(--blue); }
+.metric.yellow { background: var(--yellow); }
+.metric.red { background: var(--red); }
+.tag {
+  display: inline-block; font-size: 10px; padding: 5px 7px;
+  border: 2px solid var(--ink); background: var(--paper);
+}
+.tank-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.tank-card { text-align: center; }
+.tank {
+  height: 150px; width: 83px; border: 3px solid var(--ink);
+  border-radius: 7px 7px 18px 18px; overflow: hidden;
+  margin: 18px auto 12px; position: relative; background: #e5e3d7;
+}
+.water {
+  position: absolute; bottom: 0; left: 0; width: 100%;
+  height: 60%; background: #60c9ff;
+  transition: height 1s ease;
+}
+.water::before {
+  content: ""; position: absolute; top: -6px; left: -30%;
+  width: 160%; height: 13px; border-radius: 50%;
+  background: #a5e5ff; border: 2px solid #171717;
+  animation: wave 2s ease-in-out infinite alternate;
+}
+@keyframes wave {
+  from { transform: translateX(-8px) rotate(-3deg); }
+  to { transform: translateX(8px) rotate(3deg); }
+}
+.tank-value { font-size: 22px; }
+.tank-name { font-size: 11px; margin-top: 7px; }
+.device-row {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 12px; border-top: 2px dashed #aaa; padding: 13px 0;
+}
+.device-row:first-of-type { border-top: 0; }
+.device-name { font-size: 13px; }
+.device-sub { font-size: 10px; opacity: .65; margin-top: 5px; }
+.toggle {
+  border: 2px solid var(--ink); background: var(--red);
+  padding: 8px 12px; min-width: 77px;
+}
+.toggle.on { background: var(--green); }
+.btn {
+  border: 2px solid var(--ink); background: var(--green);
+  padding: 12px 15px; box-shadow: 3px 3px 0 var(--ink);
+}
+.btn:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 var(--ink); }
+.btn.dark { background: var(--ink); color: white; }
+.btn.danger { background: var(--red); }
+.btn.yellow { background: var(--yellow); }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.valve-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.valve {
+  border: 2px solid var(--ink); padding: 15px;
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  background: #f1eee3;
+}
+.valve.open { background: var(--green); }
+.valve button { border: 2px solid var(--ink); padding: 8px; background: white; }
+.valve.open button { background: var(--green); }
+.sequence { list-style: none; padding: 0; margin: 0; }
+.sequence li {
+  display: flex; gap: 12px; align-items: flex-start;
+  border-bottom: 2px dashed #bbb; padding: 13px 0; font-size: 12px;
+}
+.step-num {
+  border: 2px solid var(--ink); min-width: 28px; height: 28px;
+  display: grid; place-items: center; background: var(--yellow);
+}
+.sequence li.done .step-num { background: var(--green); }
+.sequence li.current { background: #f1eee3; }
+.progress { height: 17px; border: 2px solid var(--ink); margin: 16px 0; }
+.progress > div { height: 100%; width: 0; background: var(--green); transition: width .5s; }
+.alarm {
+  border: 2px solid var(--ink); padding: 12px; margin-top: 10px;
+  background: #f1eee3; font-size: 11px; line-height: 1.6;
+}
+.alarm.warning { background: var(--yellow); }
+.alarm.danger { background: var(--red); }
+table { border-collapse: collapse; width: 100%; font-size: 11px; }
+th, td { border: 2px solid var(--ink); padding: 10px 8px; text-align: left; }
+th { background: var(--green); }
+.hidden { display: none !important; }
+.view { display: grid; gap: 18px; }
+.footer { margin-top: 25px; border-top: 2px solid var(--ink); padding-top: 12px; font-size: 10px; }
+@media(max-width:1000px) {
+  .sidebar { width: 190px; }
+  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tank-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media(max-width:700px) {
+  .layout { display: block; }
+  .sidebar { width: 100%; border-right: 0; border-bottom: var(--border); padding: 17px; gap: 15px; }
+  .nav { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+  .nav button { text-align: center; font-size: 11px; padding: 10px 4px; }
+  .sidebar-bottom { display: none; }
+  main { padding: 17px; }
+  .columns { grid-template-columns: 1fr; }
+  .tank-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .card { padding: 14px; box-shadow: 3px 3px 0 var(--ink); }
+  .tank { width: 58px; height: 120px; }
+  .valve-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <div class="brand">FARM<span>PLEX / BERRY FARM</span></div>
+  <div><span class="demo-tag">● DEMO / SIMULATION</span></div>
+  <nav class="nav">
+    <button class="active" data-view="dashboard">01 / Overview</button>
+    <button data-view="controls">02 / Controls</button>
+    <button data-view="automation">03 / Automation</button>
+    <button data-view="alarms">04 / Alarms</button>
+    <button data-view="history">05 / History</button>
+  </nav>
+  <div class="sidebar-bottom">
+    SYSTEM: SIMULATED<br>
+    HARDWARE: DISCONNECTED<br>
+    DOSING: DISABLED<br>
+    <span id="clock">--:--:--</span>
+  </div>
+</aside>
+
+<main>
+<header class="topbar">
+  <div>
+    <div class="muted">FERTIGATION SYSTEM / LOCAL CONTROL</div>
+    <h1 id="page-title">OVERVIEW_</h1>
+  </div>
+  <div class="status"><span class="dot"></span><span id="system-status">SIMULATION ACTIVE</span></div>
+</header>
+
+<section id="dashboard" class="view">
+  <div class="grid metrics">
+    <div class="card metric green">
+      <div class="label">WATER pH</div>
+      <div class="number" id="ph">6.2</div>
+      <span class="tag">MOCK VALUE</span>
+    </div>
+    <div class="card metric blue">
+      <div class="label">CONDUCTIVITY / EC</div>
+      <div class="number" id="ec">1.4</div>
+      <span class="tag">mS/cm · MOCK</span>
+    </div>
+    <div class="card metric yellow">
+      <div class="label">PUMPS RUNNING</div>
+      <div class="number" id="pump-count">0 / 2</div>
+      <span class="tag">SIMULATED OUTPUTS</span>
+    </div>
+    <div class="card metric red">
+      <div class="label">OPEN VALVES</div>
+      <div class="number" id="valve-count">0 / 4</div>
+      <span class="tag">SIMULATED OUTPUTS</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>01 / TANK STATUS</h2>
+    <div class="muted">Illustrative levels only — not connected to level sensors.</div>
+    <div class="grid tank-grid" style="margin-top:12px">
+      <div class="tank-card">
+        <div class="tank"><div class="water" id="water-main" style="height:78%"></div></div>
+        <div class="tank-value" id="level-main">78%</div>
+        <div class="tank-name">MAIN WATER</div>
+      </div>
+      <div class="tank-card">
+        <div class="tank"><div class="water" id="water-ta" style="height:62%;background:#ffdc57"></div></div>
+        <div class="tank-value" id="level-ta">62%</div>
+        <div class="tank-name">STOCK TANK A</div>
+      </div>
+      <div class="tank-card">
+        <div class="tank"><div class="water" id="water-tb" style="height:54%;background:#b8ff3b"></div></div>
+        <div class="tank-value" id="level-tb">54%</div>
+        <div class="tank-name">STOCK TANK B</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid columns">
+    <div class="card">
+      <h2>02 / EQUIPMENT</h2>
+      <div class="device-row"><div><div class="device-name">P1 / MAIN PUMP</div><div class="device-sub">Water supply</div></div><span class="tag" id="p1-status">OFF</span></div>
+      <div class="device-row"><div><div class="device-name">P2 / TRANSFER PUMP</div><div class="device-sub">Mixing circuit</div></div><span class="tag" id="p2-status">OFF</span></div>
+      <div class="device-row"><div><div class="device-name">V1–V4 / VALVES</div><div class="device-sub">Irrigation distribution</div></div><span class="tag" id="valve-summary">ALL CLOSED</span></div>
+      <button class="btn" onclick="showView('controls')">OPEN CONTROLS →</button>
+    </div>
+    <div class="card">
+      <h2>03 / SAFETY STATUS</h2>
+      <div class="alarm warning" id="safety-message">DEMO MODE: Hardware interlocks are not verified. Outputs are simulated only.</div>
+      <div class="device-row"><span>Hardware connection</span><span class="tag">OFFLINE</span></div>
+      <div class="device-row"><span>Chemical dosing</span><span class="tag">DISABLED</span></div>
+      <div class="device-row"><span>Emergency stop</span><span class="tag" id="estop-status">READY</span></div>
+      <button class="btn danger" onclick="safeStop()">■ SAFE STOP</button>
+    </div>
+  </div>
+</section>
+
+<section id="controls" class="view hidden">
+  <div class="card">
+    <h2>01 / MANUAL EQUIPMENT CONTROLS</h2>
+    <div class="alarm warning">SIMULATION ONLY. These buttons change the UI state, not physical equipment. Hardware interlocks must be implemented and tested separately before deployment.</div>
+    <h3 style="margin-top:20px">PUMPS</h3>
+    <div class="grid columns">
+      <div class="device-row"><div><div class="device-name">P1 / MAIN WATER PUMP</div><div class="device-sub">Simulated output</div></div><button class="toggle" id="toggle-p1" onclick="togglePump('p1')">OFF</button></div>
+      <div class="device-row"><div><div class="device-name">P2 / TRANSFER PUMP</div><div class="device-sub">Simulated output</div></div><button class="toggle" id="toggle-p2" onclick="togglePump('p2')">OFF</button></div>
+    </div>
+    <h3 style="margin-top:25px">VALVES / V1–V4</h3>
+    <div class="grid valve-grid">
+      <div class="valve" id="box-v1"><div><div>V1 / ZONE 01</div><div class="muted">Simulated valve</div></div><button onclick="toggleValve('v1')" id="toggle-v1">OPEN</button></div>
+      <div class="valve" id="box-v2"><div><div>V2 / ZONE 02</div><div class="muted">Simulated valve</div></div><button onclick="toggleValve('v2')" id="toggle-v2">OPEN</button></div>
+      <div class="valve" id="box-v3"><div><div>V3 / ZONE 03</div><div class="muted">Simulated valve</div></div><button onclick="toggleValve('v3')" id="toggle-v3">OPEN</button></div>
+      <div class="valve" id="box-v4"><div><div>V4 / ZONE 04</div><div class="muted">Simulated valve</div></div><button onclick="toggleValve('v4')" id="toggle-v4">OPEN</button></div>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:22px">
+      <button class="btn" onclick="allValves(true)">OPEN ALL (SIM)</button>
+      <button class="btn yellow" onclick="allValves(false)">CLOSE ALL</button>
+      <button class="btn danger" onclick="safeStop()">■ SAFE STOP</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>02 / TANK LEVEL SIMULATOR</h2>
+    <p class="muted">Move sliders to test the animated tank display. These values are not sensor readings.</p>
+    <div class="device-row"><label for="main-range">Main water</label><input id="main-range" type="range" min="0" max="100" value="78" oninput="setLevel('main',this.value)"><b id="main-range-value">78%</b></div>
+    <div class="device-row"><label for="ta-range">Stock tank A</label><input id="ta-range" type="range" min="0" max="100" value="62" oninput="setLevel('ta',this.value)"><b id="ta-range-value">62%</b></div>
+    <div class="device-row"><label for="tb-range">Stock tank B</label><input id="tb-range" type="range" min="0" max="100" value="54" oninput="setLevel('tb',this.value)"><b id="tb-range-value">54%</b></div>
+  </div>
+</section>
+
+<section id="automation" class="view hidden">
+  <div class="card">
+    <h2>01 / AUTOMATION SEQUENCE</h2>
+    <div class="alarm warning">The sequence is a visual demonstration. It does not dose chemicals or operate connected hardware.</div>
+    <ol class="sequence" id="sequence">
+      <li><span class="step-num">01</span><div><b>PRE-FLIGHT CHECK</b><div class="muted">Check demo interlock and simulated tank levels.</div></div></li>
+      <li><span class="step-num">02</span><div><b>WATER SUPPLY</b><div class="muted">Illustrate main pump state.</div></div></li>
+      <li><span class="step-num">03</span><div><b>VALVE SELECTION</b><div class="muted">Display simulated irrigation route.</div></div></li>
+      <li><span class="step-num">04</span><div><b>MONITOR pH / EC</b><div class="muted">Display mock values; no chemical correction.</div></div></li>
+      <li><span class="step-num">05</span><div><b>COMPLETE / SAFE IDLE</b><div class="muted">Stop the demonstration sequence.</div></div></li>
+    </ol>
+    <div class="progress"><div id="progress-bar"></div></div>
+    <div id="sequence-status" class="muted">SEQUENCE IDLE</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:18px">
+      <button class="btn" id="start-sequence" onclick="startSequence()">▶ RUN DEMO</button>
+      <button class="btn yellow" onclick="resetSequence()">↺ RESET</button>
+      <button class="btn danger" onclick="safeStop()">■ SAFE STOP</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>02 / INTERLOCK CHECKLIST</h2>
+    <div class="alarm">Before connecting real equipment, implement and verify physical emergency stop, pump dry-run protection, independent low-level switches, overflow protection, valve feedback, sensor-failure handling, and hardware watchdogs. Do not rely on this browser UI as a safety controller.</div>
+  </div>
+</section>
+
+<section id="alarms" class="view hidden">
+  <div class="card">
+    <h2>01 / ALARM CENTER</h2>
+    <div class="alarm warning">DEMO MODE — hardware disconnected. Real interlock status is unknown.</div>
+    <div class="alarm" id="alarm-tank">INFO / Tank levels are simulated and adjustable.</div>
+    <div class="alarm" id="alarm-sensor">INFO / pH and EC are illustrative values, not sensor measurements.</div>
+    <div class="alarm" id="alarm-stop">INFO / No physical emergency-stop feedback is available.</div>
+    <button class="btn" style="margin-top:16px" onclick="clearDemoAlarms()">ACKNOWLEDGE DEMO NOTICES</button>
+  </div>
+</section>
+
+<section id="history" class="view hidden">
+  <div class="card">
+    <h2>01 / EVENT HISTORY</h2>
+    <p class="muted">Browser-session simulation log. Not a permanent or hardware audit log.</p>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>TIME</th><th>EVENT</th><th>RESULT</th></tr></thead>
+        <tbody id="history-body"></tbody>
+      </table>
+    </div>
+    <button class="btn yellow" style="margin-top:16px" onclick="clearHistory()">CLEAR SESSION LOG</button>
+  </div>
+</section>
+
+<div class="footer">FARMPLEX BERRY FARM / FERTIGATION UI PROTOTYPE / MOCK DATA ONLY / NO HARDWARE CONNECTION</div>
+</main>
+</div>
+
+<script>
+const state = {
+  pumps: {p1:false, p2:false},
+  valves: {v1:false, v2:false, v3:false, v4:false},
+  levels: {main:78, ta:62, tb:54},
+  stopped:false,
+  sequenceTimer:null
+};
+
+function log(event, result="SIMULATED") {
+  const body = document.getElementById("history-body");
+  const row = document.createElement("tr");
+  const time = new Date().toLocaleTimeString();
+  [time,event,result].forEach(value => {
+    const cell = document.createElement("td");
+    cell.textContent = value;
+    row.appendChild(cell);
+  });
+  body.prepend(row);
+}
+
+function showView(name) {
+  document.querySelectorAll(".view").forEach(v => v.classList.add("hidden"));
+  document.getElementById(name).classList.remove("hidden");
+  document.querySelectorAll(".nav button").forEach(b =>
+    b.classList.toggle("active", b.dataset.view === name)
+  );
+  const titles = {
+    dashboard:"OVERVIEW_",
+    controls:"MANUAL CONTROLS_",
+    automation:"AUTOMATION_",
+    alarms:"ALARM CENTER_",
+    history:"EVENT HISTORY_"
+  };
+  document.getElementById("page-title").textContent = titles[name];
+}
+document.querySelectorAll(".nav button").forEach(button =>
+  button.addEventListener("click", () => showView(button.dataset.view))
+);
+
+function updateUI() {
+  for (const id of ["p1","p2"]) {
+    const button = document.getElementById("toggle-" + id);
+    button.textContent = state.pumps[id] ? "ON" : "OFF";
+    button.classList.toggle("on", state.pumps[id]);
+    document.getElementById(id + "-status").textContent = state.pumps[id] ? "ON" : "OFF";
+  }
+
+  for (const id of ["v1","v2","v3","v4"]) {
+    document.getElementById("toggle-" + id).textContent = state.valves[id] ? "CLOSE" : "OPEN";
+    document.getElementById("box-" + id).classList.toggle("open",state.valves[id]);
+  }
+
+  const pumps = Object.values(state.pumps).filter(Boolean).length;
+  const valves = Object.values(state.valves).filter(Boolean).length;
+  document.getElementById("pump-count").textContent = pumps + " / 2";
+  document.getElementById("valve-count").textContent = valves + " / 4";
+  document.getElementById("valve-summary").textContent = valves ? valves + " OPEN" : "ALL CLOSED";
+  document.getElementById("system-status").textContent = state.stopped ? "SAFE STOP / SIM" : "SIMULATION ACTIVE";
+  document.getElementById("estop-status").textContent = state.stopped ? "STOPPED" : "READY";
+  document.getElementById("safety-message").textContent = state.stopped
+    ? "SAFE STOP ACTIVE in simulation. All simulated pumps are off and valves are closed."
+    : "DEMO MODE: Hardware interlocks are not verified. Outputs are simulated only.";
+}
+
+function togglePump(id) {
+  if (state.stopped) {
+    log("Pump command rejected: safe stop active","BLOCKED");
+    return;
+  }
+  if (id === "p2" && !state.pumps.p1) {
+    log("P2 start rejected: simulated P1 prerequisite not met","BLOCKED");
+    alert("Demo interlock: P1 must be on before P2. No hardware is connected.");
+    return;
+  }
+  if (id === "p1" && state.pumps.p2) {
+    log("P1 stop rejected: P2 simulated state is on","BLOCKED");
+    alert("Turn off P2 first in this demonstration.");
+    return;
+  }
+  state.pumps[id] = !state.pumps[id];
+  updateUI();
+  log(id.toUpperCase() + (state.pumps[id] ? " switched on" : " switched off"));
+}
+
+function toggleValve(id) {
+  if (state.stopped) {
+    log("Valve command rejected: safe stop active","BLOCKED");
+    return;
+  }
+  state.valves[id] = !state.valves[id];
+  updateUI();
+  log(id.toUpperCase() + (state.valves[id] ? " opened" : " closed"));
+}
+
+function allValves(open) {
+  if (state.stopped && open) {
+    log("Open-all rejected: safe stop active","BLOCKED");
+    return;
+  }
+  Object.keys(state.valves).forEach(id => state.valves[id] = open);
+  updateUI();
+  log(open ? "All valves opened (simulation)" : "All valves closed (simulation)");
+}
+
+function setLevel(id, value) {
+  value = Number(value);
+  state.levels[id] = value;
+  document.getElementById("water-" + id).style.height = value + "%";
+  document.getElementById("level-" + id).textContent = value + "%";
+  document.getElementById(id + "-range-value").textContent = value + "%";
+  document.getElementById("alarm-tank").textContent =
+    (value < 20 ? "WARNING" : "INFO") + " / " +
+    id.toUpperCase() + " simulated level: " + value + "%.";
+}
+
+function safeStop() {
+  clearInterval(state.sequenceTimer);
+  state.sequenceTimer = null;
+  state.stopped = true;
+  Object.keys(state.pumps).forEach(id => state.pumps[id] = false);
+  Object.keys(state.valves).forEach(id => state.valves[id] = false);
+  document.getElementById("sequence-status").textContent = "STOPPED / SIMULATION";
+  document.getElementById("start-sequence").disabled = true;
+  document.getElementById("alarm-stop").textContent = "SAFE STOP activated in simulation. Physical emergency-stop status remains unknown.";
+  updateUI();
+  log("SAFE STOP activated","SIMULATED");
+}
+
+function resetSequence() {
+  clearInterval(state.sequenceTimer);
+  state.sequenceTimer = null;
+  document.querySelectorAll("#sequence li").forEach(li => li.classList.remove("done","current"));
+  document.getElementById("progress-bar").style.width = "0%";
+  document.getElementById("sequence-status").textContent = "SEQUENCE IDLE";
+  document.getElementById("start-sequence").disabled = false;
+  log("Demo sequence reset");
+}
+
+function startSequence() {
+  if (state.stopped) {
+    alert("Reset the demo safe-stop state before running another sequence.");
+    return;
+  }
+  if (state.levels.main < 20 || state.levels.ta < 20 || state.levels.tb < 20) {
+    alert("Demo interlock: a simulated tank level is below 20%. Raise the level before running.");
+    log("Sequence blocked: low simulated tank level","BLOCKED");
+    return;
+  }
+
+  resetSequence();
+  const steps = [...document.querySelectorAll("#sequence li")];
+  let index = 0;
+  document.getElementById("start-sequence").disabled = true;
+  document.getElementById("sequence-status").textContent = "DEMO SEQUENCE RUNNING";
+  log("Demo automation sequence started");
+
+  state.sequenceTimer = setInterval(() => {
+    if (index > 0) {
+      steps[index-1].classList.remove("current");
+      steps[index-1].classList.add("done");
+    }
+    if (index < steps.length) {
+      steps[index].classList.add("current");
+      document.getElementById("progress-bar").style.width =
+        ((index+1)/steps.length*100) + "%";
+      document.getElementById("sequence-status").textContent =
+        "STEP " + (index+1) + " / " + steps.length;
+      index++;
+    } else {
+      clearInterval(state.sequenceTimer);
+      state.sequenceTimer = null;
+      document.getElementById("sequence-status").textContent = "DEMO COMPLETE / SAFE IDLE";
+      document.getElementById("start-sequence").disabled = false;
+      log("Demo sequence completed; no dosing performed");
+    }
+  }, 1200);
+}
+
+function clearDemoAlarms() {
+  document.getElementById("alarm-tank").textContent = "INFO / Tank levels are simulated and adjustable.";
+  document.getElementById("alarm-sensor").textContent = "INFO / pH and EC are illustrative values, not sensor measurements.";
+  document.getElementById("alarm-stop").textContent = "INFO / No physical emergency-stop feedback is available.";
+  log("Demo notices acknowledged");
+}
+
+function clearHistory() {
+  document.getElementById("history-body").replaceChildren();
+  log("Session history cleared");
+}
+
+function updateClock() {
+  document.getElementById("clock").textContent = new Date().toLocaleTimeString();
+}
+setInterval(updateClock,1000);
+updateClock();
+updateUI();
+log("Farmplex demo interface initialized");
+</script>
+</body>
+</html>
