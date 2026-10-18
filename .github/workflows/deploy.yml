@@ -1,0 +1,47 @@
+name: Deploy Farmplex to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare complete static site
+        run: |
+          mkdir -p site
+          rsync -a --exclude='.git' --exclude='.github' --exclude='node_modules' --exclude='.venv' --exclude='venv' ./ site/
+          if [ -f site/preview.html ] && [ ! -f site/index.html ]; then
+            cp site/preview.html site/index.html
+          fi
+          test -f site/index.html || { echo "No index.html or preview.html found"; exit 1; }
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
